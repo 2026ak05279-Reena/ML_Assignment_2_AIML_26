@@ -1,3 +1,4 @@
+%%writefile app.py
 import streamlit as st
 import pandas as pd
 import joblib
@@ -56,6 +57,14 @@ st.markdown("""
     section[data-testid="stSidebar"] * {
         color: #ffffff !important;
     }
+    /* Target specific file text styling to make test.csv / test_data.csv stand out */
+    .highlight-text {
+        color: #fef08a !important; /* Bright high-contrast yellow/gold */
+        font-weight: bold;
+        background-color: rgba(255, 255, 255, 0.1);
+        padding: 2px 6px;
+        border-radius: 4px;
+    }
     </style>
 """, unsafe_allow_html=True)
 
@@ -65,7 +74,7 @@ with st.sidebar:
     st.markdown("This workspace evaluates 5 pre-trained machine learning classifiers trained on the **Breast Cancer Wisconsin (Diagnostic) Dataset** containing 30 cellular features.")
     st.markdown("---")
     st.markdown("### Execution Quickstart")
-    st.write("1. Upload your `test_data.csv` evaluation dataset.")
+    st.markdown("1. Upload your <span class='highlight-text'>test_data.csv</span> (or <span class='highlight-text'>test.csv</span>) evaluation dataset.", unsafe_allow_html=True)
     st.write("2. Select any model architecture from the list.")
     st.write("3. Inspect prediction scores, matrices, and metrics dynamically!")
 
@@ -79,7 +88,7 @@ uploaded_file = st.file_uploader("Upload your evaluation CSV file", type=["csv"]
 
 if uploaded_file is not None:
     df = pd.read_csv(uploaded_file)
-    
+
     # Display data preview inside an expander
     with st.expander("Preview Uploaded Dataset Records", expanded=True):
         st.dataframe(df.head(), use_container_width=True)
@@ -102,63 +111,4 @@ if uploaded_file is not None:
             model = joblib.load(model_filename)
 
             # Apply Scaling if necessary
-            if model_option in ["Logistic Regression", "KNN", "Support Vector Machine"]:
-                scaler = joblib.load("model/scaler.joblib")
-                X_test_processed = scaler.transform(X_test)
-            else:
-                X_test_processed = X_test
-
-            # Predict
-            preds = model.predict(X_test_processed)
-            probs = model.predict_proba(X_test_processed)[:, 1] if hasattr(model, "predict_proba") else None
-
-            st.markdown("---")
-            st.subheader(f"Active Performance Metrics Dashboard: {model_option}")
-
-            # 3. Display evaluation metrics beautifully in structured columns
-            col1, col2, col3, col4, col5, col6 = st.columns(6)
-            with col1:
-                st.metric("Accuracy", f"{accuracy_score(y_test, preds):.4f}")
-            with col2:
-                if probs is not None:
-                    st.metric("AUC Score", f"{roc_auc_score(y_test, probs):.4f}")
-                else:
-                    st.metric("AUC Score", "N/A")
-            with col3:
-                st.metric("MCC Score", f"{matthews_corrcoef(y_test, preds):.4f}")
-            with col4:
-                st.metric("Precision", f"{precision_score(y_test, preds):.4f}")
-            with col5:
-                st.metric("Recall", f"{recall_score(y_test, preds):.4f}")
-            with col6:
-                st.metric("F1 Score", f"{f1_score(y_test, preds):.4f}")
-
-            st.markdown("---")
-
-            # Layout for Visualizations
-            vis_col1, vis_col2 = st.columns([1, 1])
-            
-            with vis_col1:
-                st.subheader("Confusion Matrix Heatmap")
-                cm = confusion_matrix(y_test, preds)
-                fig, ax = plt.subplots(figsize=(5, 4))
-                # Custom teal/green colormap
-                sns.heatmap(cm, annot=True, fmt="d", cmap="YlGnBu", ax=ax, cbar=False,
-                            xticklabels=['Malignant', 'Benign'], yticklabels=['Malignant', 'Benign'])
-                plt.ylabel('Actual Label')
-                plt.xlabel('Predicted Label')
-                plt.tight_layout()
-                st.pyplot(fig)
-
-            with vis_col2:
-                st.subheader("Classification Report Summary")
-                st.markdown("Statistical performance indicators categorized by target classes:")
-                
-                # Generate report as a dictionary to tabulate
-                report_dict = classification_report(y_test, preds, target_names=['Malignant', 'Benign'], output_dict=True)
-                report_df = pd.DataFrame(report_dict).transpose().round(4)
-                st.dataframe(report_df, use_container_width=True)
-        else:
-            st.error(f"Model file '{model_filename}' not found. Please verify that your trained models are uploaded inside the 'model/' directory.")
-    else:
-        st.error("The uploaded test CSV must contain a 'target' column.")
+            if model_option in [
