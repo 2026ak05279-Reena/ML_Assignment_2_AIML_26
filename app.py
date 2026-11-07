@@ -1,4 +1,3 @@
-
 import streamlit as st
 import pandas as pd
 import joblib
@@ -17,41 +16,45 @@ st.set_page_config(
 # Custom CSS to inject professional green and teal styling
 st.markdown("""
     <style>
-    .main {
-        background-color: #f4f7f6;
+    /* Main background color */
+    .stApp {
+        background-color: #f0fdf4 !important;
     }
+    /* Custom styles for headers */
     h1 {
-        color: #0f4c3a;
+        color: #042f2e !important;
         font-family: 'Inter', 'Helvetica Neue', Arial, sans-serif;
         font-weight: 800;
     }
     h2, h3 {
-        color: #1b4d3e;
+        color: #0f766e !important;
         font-family: 'Inter', 'Helvetica Neue', Arial, sans-serif;
         font-weight: 600;
     }
-    /* Custom Card Style for Metrics */
+    /* Metric adjustments */
+    div[data-testid="stMetric"] {
+        background-color: #ffffff;
+        border-left: 5px solid #0d9488;
+        border-radius: 6px;
+        padding: 10px 15px;
+        box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+    }
     div[data-testid="stMetricValue"] {
         font-size: 26px;
         font-weight: 800;
-        color: #115e59;
+        color: #0f766e !important;
     }
     div[data-testid="stMetricLabel"] {
         font-size: 14px;
-        color: #374151;
+        color: #1e293b !important;
         font-weight: 600;
     }
-    .reportview-container .main .block-container {
-        padding-top: 1.5rem;
+    /* Sidebar Background adjustment */
+    section[data-testid="stSidebar"] {
+        background-color: #0f766e !important;
     }
-    /* Styled box container */
-    .panel-box {
-        background-color: #ffffff;
-        border-top: 4px solid #0f4c3a;
-        border-radius: 6px;
-        padding: 20px;
-        margin-bottom: 20px;
-        box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+    section[data-testid="stSidebar"] * {
+        color: #ffffff !important;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -150,7 +153,11 @@ if uploaded_file is not None:
             with vis_col2:
                 st.subheader("Classification Report Summary")
                 st.markdown("Statistical performance indicators categorized by target classes:")
-                st.text(classification_report(y_test, preds, target_names=['Malignant', 'Benign']))
+                
+                # Generate report as a dictionary to tabulate
+                report_dict = classification_report(y_test, preds, target_names=['Malignant', 'Benign'], output_dict=True)
+                report_df = pd.DataFrame(report_dict).transpose().round(4)
+                st.dataframe(report_df, use_container_width=True)
         else:
             st.error(f"Model file '{model_filename}' not found. Please verify that your trained models are uploaded inside the 'model/' directory.")
     else:
